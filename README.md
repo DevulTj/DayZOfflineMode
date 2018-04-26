@@ -10,6 +10,11 @@
 * Click play DayZ, and click DayZ Offline.
 * Done!
 
+# How do I make my own changes?
+* If you have a PBO Manager, you must edit the files inside the SourceCode/scripts folder.
+* Pack it to your own scripts.pbo.
+* And finally, place it into your DayZ dta folder.
+
 # Rest of the README.md by Arkensor
 # Controls:
 * T - Teleport at the position you are looking at
