@@ -5,7 +5,7 @@
 # Installation:
 * Ensure you are on the 0.63 Stress Test build - find out [here](https://dayz.com/blog/0-63-stress-tests) if you are, and set it up correctly.
 * Download this repository.
-* Place all the files into your DayZ directory, replace **all** files if required.
+* Place all the files (except the SourceCode directory; though it does not matter) into your DayZ directory, replace **all** files if required.
 * **NOTE:** Make backups of the Missions folder and dta/scripts.pbo file so you can revert if needed.
 * Click play DayZ, and click DayZ Offline.
 * Done!
