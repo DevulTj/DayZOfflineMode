@@ -693,9 +693,9 @@ class MissionGameplay extends MissionBase
 				Pause();
 			}
 		}
+		
 		UpdateDebugMonitor();
 	}
-	
 
 	vector GetCursorPos()
 	{
@@ -708,13 +708,7 @@ class MissionGameplay extends MissionBase
 		
 		return hitPos;
 	}
-	{
-		string child_name = "";
 
-		for (int p = 0; p < count; p++)
-		{
-			if ( GetGame().IsKindOf(child_name, strBaseClass ) )
-			{
 	// ---------- Keyhandler part
 	
 	bool CTRL()
