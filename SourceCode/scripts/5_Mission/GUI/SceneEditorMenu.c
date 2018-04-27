@@ -493,7 +493,8 @@ class SceneEditorMenu extends UIScriptedMenu
 			//float distance = m_SpawnDistanceEditBox.GetText().ToFloat();
 			if ( m_SelectedObjectIsPreset )
 			{
-				SetPreset( true, m_SelectedObject);
+				SetPreset( true, m_SelectedObject );
+				
 				return true;
 			}
 			else
@@ -589,19 +590,11 @@ class SceneEditorMenu extends UIScriptedMenu
 				{
 					if ( m_SelectedObjectIsPreset )
 					{
-                        SetPreset( true, m_SelectedObject );
+						// SpawnPresetOnGround
+						SetPreset( true, m_SelectedObject );
 					}
 					else
-					{
-                        EntityAI oObj = g_Game.CreateObject( m_SelectedObject, g_Game.GetPlayer().GetPosition(), false );
-                        
-                        if ( oObj.IsInherited( ItemBase ) )
-                        {
-                            ItemBase oItem = ( ItemBase ) oObj;
-                            SetupSpawnedItem( oItem, health, quantity );
-                        }
-					}
-					
+						m_Developer.SpawnEntityOnCursorDir( PlayerBase.Cast( GetGame().GetPlayer() ), m_SelectedObject, health, quantity, distance );
 					break;
 				}
 
@@ -635,10 +628,7 @@ class SceneEditorMenu extends UIScriptedMenu
 
 				case m_SpawnInInventoryButton:
 				{
-					EntityAI oInvItem = g_Game.GetPlayer().GetInventory().CreateInInventory( m_SelectedObject );
-					
-					oInvItem.SetHealth( health );
-					
+					m_Developer.SpawnEntityInInventory( PlayerBase.Cast( GetGame().GetPlayer() ), m_SelectedObject, health, quantity);
 					break;
 				}
 			}

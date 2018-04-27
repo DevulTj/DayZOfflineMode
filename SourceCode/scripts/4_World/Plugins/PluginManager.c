@@ -112,10 +112,6 @@ class PluginManager
 				plugin.OnInit();
 			}
 		}
-		
-		PluginSceneManager oPlugin = GetPluginByType(PluginSceneManager);
-		
-		oPlugin.EditorToggle();
 	}
 	
 	//=================================

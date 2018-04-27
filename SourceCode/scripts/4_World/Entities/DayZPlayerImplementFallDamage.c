@@ -15,9 +15,9 @@ class DayZPlayerImplementFallDamage
 
 	//! damage coef calculated from height
 	float DamageCoef(float pHeight)
-	{	
-		if( pHeight >= 10 )
-			return 0;
+	{
+		if (pHeight >= FD_MAX_DMG_AT_HEIGHT)
+			return 100;
 
 		return (pHeight - FD_DMG_FROM_HEIGHT);
 	}
@@ -25,8 +25,6 @@ class DayZPlayerImplementFallDamage
 	//! handle fall damage
 	void HandleFallDamage(float pHeight)
 	{
-		Print( pHeight );
-		
 		if (GetGame().IsServer())
 		{
 			//! no dmg height
