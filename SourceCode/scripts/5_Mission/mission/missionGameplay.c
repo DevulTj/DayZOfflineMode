@@ -1,5 +1,3 @@
-// #include "Scripts/GUI/IngameHud.c"
-
 class MissionGameplay extends MissionBase
 {
 	int		m_life_state;
@@ -40,13 +38,12 @@ class MissionGameplay extends MissionBase
 	protected const int 			HOLD_LIMIT_TIME	= 300; //ms
 	protected int					m_ActionDownTime;
 	protected int					m_ActionUpTime;
-
+	
 	//For freecam and utils
     PlayerBase m_oPlayer;
 	Camera m_oCamera;
 	bool m_bDebugMonitor = false;
 	bool m_bGodMode = false;
-	bool m_bWelcomeSeen = false;
 
 	//For keyhandler
 	bool m_IsCtrlHolding = false;
@@ -82,7 +79,6 @@ class MissionGameplay extends MissionBase
 	#ifndef NO_GUI
 		if (g_Game && g_Game.GetUIManager() && g_Game.GetUIManager().ScreenFadeVisible())
 		{
-			GetGame().SetEVUser(0);
 			g_Game.GetUIManager().ScreenFadeOut(0);
 		}
 	#endif
@@ -126,7 +122,7 @@ class MissionGameplay extends MissionBase
 		
 		m_oPlayer.SetAllowDamage( true );
 	}
-	
+
 	InventoryMenuNew GetInventory()
 	{
 		return m_inventory_menu_new;
@@ -138,8 +134,7 @@ class MissionGameplay extends MissionBase
 		{
 			return;
 		}
-			
-		
+
 		m_UIManager = GetGame().GetUIManager();
 			
 		g_Game.m_loadingScreenOn = true;
@@ -188,10 +183,10 @@ class MissionGameplay extends MissionBase
 		m_volume_music = GetGame().GetSoundScene().GetMusicVolume();
 		m_volume_VOIP = GetGame().GetSoundScene().GetVOIPVolume();
 		m_volume_radio = GetGame().GetSoundScene().GetRadioVolume();
-
+		
 		SpawnPlayer();
 	}
-	
+
 	UIManager GetUIManager()
 	{
 		return m_UIManager;
@@ -203,7 +198,7 @@ class MissionGameplay extends MissionBase
 		m_hud_root_widget.Show(true);
 		GetUIManager().ShowUICursor(false);
 		g_Game.SetMissionState( DayZGame.MISSION_STATE_GAME );
-
+		
 		CreateDebugMonitor();
 		m_debugMonitor.Hide();
 	}
@@ -262,6 +257,14 @@ class MissionGameplay extends MissionBase
 		//m_inventory_menu_new = inventory;
 		InspectMenuNew inspect = InspectMenuNew.Cast( m_UIManager.FindMenu(MENU_INSPECT) );
 		Input input = GetGame().GetInput();
+		
+		if( m_bGodMode )
+		{
+			player.SetHealth( player.GetMaxHealth( "", "" ) );
+			player.SetHealth( "","Blood", player.GetMaxHealth( "", "Blood" ) );
+		}
+		
+		UpdateDebugMonitor();
 		
 		//TODO should be switchable
 		if (playerPB && playerPB.enterNoteMenuRead)
@@ -636,7 +639,8 @@ class MissionGameplay extends MissionBase
 					CloseAllMenus();
 					if (m_life_state == EPlayerStates.DEAD)
 					{
-						GetGame().GetCallQueue(CALL_CATEGORY_GUI).Call(SimulateDeath,true);
+						// GetGame().GetCallQueue(CALL_CATEGORY_GUI).Call(SimulateDeath,true);
+						GetGame().PlayMission( "$CurrentDir:\\missions\\dayzOffline.ChernarusPlus" );
 					}
 				}
 				else if (m_life_state == EPlayerStates.ALIVE)
@@ -693,10 +697,8 @@ class MissionGameplay extends MissionBase
 				Pause();
 			}
 		}
-		
-		UpdateDebugMonitor();
 	}
-
+	
 	vector GetCursorPos()
 	{
 		vector rayStart = GetGame().GetCurrentCameraPosition();
@@ -708,7 +710,26 @@ class MissionGameplay extends MissionBase
 		
 		return hitPos;
 	}
+	
+	string GetRandomChildFromBaseClass( string strConfigName, string strBaseClass )
+	{
+		string child_name = "";
+		int count = GetGame().ConfigGetChildrenCount ( strConfigName );
+		array<string> class_names = new array<string>;
 
+		for (int p = 0; p < count; p++)
+		{
+			GetGame().ConfigGetChildName ( strConfigName, p, child_name );
+			
+			if ( GetGame().IsKindOf(child_name, strBaseClass ) )
+			{
+				class_names.Insert(child_name);
+			}
+		}
+		
+		return class_names.GetRandomElement()
+	}
+	
 	// ---------- Keyhandler part
 	
 	bool CTRL()
@@ -730,65 +751,18 @@ class MissionGameplay extends MissionBase
 	{
 		return ( m_IsLeftAltHolding || m_IsRightAltHolding );
 	}
-
-	bool KConfirmed = false;
-
-	string GetRandomChildFromBaseClass( string strConfigName, string strBaseClass )
-	{
-		string child_name = "";
-		int count = GetGame().ConfigGetChildrenCount ( strConfigName );
-		array<string> class_names = new array<string>;
-
-		for (int p = 0; p < count; p++)
-		{
-			GetGame().ConfigGetChildName ( strConfigName, p, child_name );
-			
-			if ( GetGame().IsKindOf(child_name, strBaseClass ) )
-			{
-				class_names.Insert(child_name);
-			}
-		}
-		
-		return class_names.GetRandomElement()
-	}
 	
 	override void OnKeyPress(int key)
 	{
 		super.OnKeyPress(key);
+		
 		m_hud.KeyPress(key);
 		
-		/*
-		//temporary
-		//Gestures [.]
-		if ( key == KeyCode.KC_PERIOD )
-		{
-			//open gestures menu
-			if ( !GetUIManager().IsMenuOpen( MENU_GESTURES ) )
-			{
-				//TODO reconnect when appropriate
-				GesturesMenu.OpenMenu();
-			}
-		}
-		//temporary
-		//Radial Quickbar [,]
-		if ( key == KeyCode.KC_COMMA )
-		{
-			//open radial quickbar menu
-			if ( !GetGame().GetUIManager().IsMenuOpen( MENU_RADIAL_QUICKBAR ) )
-			{
-				//TODO reconnect when appropriate
-				RadialQuickbarMenu.OpenMenu();
-			}
-		}
-		*/
-
-
-		// No key presses while in UI
 		if( GetGame().GetUIManager().GetMenu() )
 		{
 			return;
 		}
-
+		
 		switch( key )
 		{
 			case KeyCode.KC_LCONTROL:
@@ -827,14 +801,42 @@ class MissionGameplay extends MissionBase
 				break:
 			}
 			
+			//Gestures [.]
+			case KeyCode.KC_PERIOD:
+			{
+				//open gestures menu
+				if ( !GetUIManager().IsMenuOpen( MENU_GESTURES ) )
+				{
+					//TODO reconnect when appropriate
+					GesturesMenu.OpenMenu();
+				}
+				
+				break;
+			}
+			
+			//Radial Quickbar [,]
+			case KeyCode.KC_COMMA:
+			{
+				//open radial quickbar menu
+				if ( !GetGame().GetUIManager().IsMenuOpen( MENU_RADIAL_QUICKBAR ) )
+				{
+					//TODO reconnect when appropriate
+					RadialQuickbarMenu.OpenMenu();
+				}
+				
+				break;
+			}
+			
 			case KeyCode.KC_DELETE:
 			{
 				if ( g_Game.GetUIManager().GetMenu() == NULL )
 				{
+					g_Game.GetUIManager().ShowUICursor(true);
 					g_Game.GetUIManager().EnterScriptedMenu(MENU_SCENE_EDITOR, NULL);
 				}
 				else if ( g_Game.GetUIManager().IsMenuOpen(MENU_SCENE_EDITOR) )
 				{
+					g_Game.GetUIManager().ShowUICursor(false);
 					g_Game.GetUIManager().Back();
 				}
 				
@@ -923,11 +925,9 @@ class MissionGameplay extends MissionBase
 				
 				break;
 			}
-
+			
 			case KeyCode.KC_B:
 			{
-				Print( m_debugMonitor );
-				
 				if( m_bDebugMonitor )
 				{
 					m_debugMonitor.Hide();
@@ -941,21 +941,18 @@ class MissionGameplay extends MissionBase
 				
 				break;
 			}
-
+			
 			
 			case KeyCode.KC_K:
 			{
-				if (!KConfirmed)
+				if (CTRL())
 				{
-					KConfirmed = true;
-
-					return;
-					break;
+					GetGame().PlayMission( "$CurrentDir:\\missions\\dayzOffline.ChernarusPlus" );
 				}
 
-				GetGame().PlayMission( "$CurrentDir:\\missions\\dayzOffline.ChernarusPlus" );
+				break;
 			}
-
+			
 			case KeyCode.KC_INSERT:
 			{	
 				if ( m_oCamera )
@@ -981,7 +978,7 @@ class MissionGameplay extends MissionBase
 				
 				break;
 			}
-
+			
 			case KeyCode.KC_END:
 			{
 				if ( m_bGodMode )
@@ -998,39 +995,22 @@ class MissionGameplay extends MissionBase
 				}
 				
 				break;
+			}		
+			
+			case KeyCode.KC_HOME:
+			{
+				DamageSystem.ExplosionDamage( NULL, NULL, "Dummy_Heavy", GetCursorPos() );
+				Particle.Play( ParticleList.EXPLOSION_TEST, GetCursorPos() );
+
+				break;
 			}
-		}
+		}	
 	}
 	
 	override void OnKeyRelease(int key)
 	{
 		super.OnKeyRelease(key);
-		
-		/*
-		//temporary
-		//Gestures [.]
-		if ( key == KeyCode.KC_PERIOD )
-		{
-			//close gestures menu
-			if ( GetUIManager().IsMenuOpen( MENU_GESTURES ) )
-			{
-				//TODO reconnect when appropriate
-				GesturesMenu.CloseMenu();
-			}
-		}
-		//temporary
-		//Radial Quickbar [,]
-		if ( key == KeyCode.KC_COMMA )
-		{
-			//close radial quickbar menu
-			if ( GetGame().GetUIManager().IsMenuOpen( MENU_RADIAL_QUICKBAR ) )
-			{
-				//TODO reconnect when appropriate
-				RadialQuickbarMenu.CloseMenu();
-			}
-		}
-		*/
-
+				
 		switch( key )
 		{
 			case KeyCode.KC_LCONTROL:
@@ -1053,6 +1033,7 @@ class MissionGameplay extends MissionBase
 				break;
 			}
 						
+			
 			case KeyCode.KC_RMENU:
 			{
 				m_IsRightAltHolding = false;
@@ -1064,7 +1045,7 @@ class MissionGameplay extends MissionBase
 				m_IsLeftShiftHolding = false;
 				break:
 			}
-
+			
 			case KeyCode.KC_RSHIFT:
 			{
 				m_IsRightShiftHolding = false;
@@ -1425,17 +1406,24 @@ class MissionGameplay extends MissionBase
 	{
 		if (!m_debugMonitor) return;
 		
-		PlayerBase player = PlayerBase.Cast( GetGame().GetPlayer() );
-		if (player)
+		if (m_oPlayer)
 		{
-			DebugMonitorValues values = player.GetDebugMonitorValues();
-			if (values)
-			{
-				m_debugMonitor.SetHealth(values.GetHealth());
-				m_debugMonitor.SetBlood(values.GetBlood());
-				m_debugMonitor.SetLastDamage(values.GetLastDamage());
-				m_debugMonitor.SetPosition(player.GetPosition());
-			}
+			DebugMonitorValues values = m_oPlayer.GetDebugMonitorValues();
+			
+			// if (values)
+			// {
+				// m_debugMonitor.SetHealth( values.GetHealth() );
+				// m_debugMonitor.SetBlood( values.GetBlood() );
+				// m_debugMonitor.SetLastDamage( values.GetLastDamage() );
+				// m_debugMonitor.SetPosition( m_oPlayer.GetPosition() );
+			// }
+			// else
+			// {
+				m_debugMonitor.SetHealth( m_oPlayer.GetHealth( "","" ) );
+				m_debugMonitor.SetBlood(  m_oPlayer.GetHealth( "","Blood" ) );
+				m_debugMonitor.SetLastDamage( values.GetLastDamage() );
+				m_debugMonitor.SetPosition( m_oPlayer.GetPosition() );
+			// }
 		}
 	}
 	
